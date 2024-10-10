@@ -1,5 +1,4 @@
 config:
-  aws:profile: work
-  aws:region: us-west-2
+  aws:region: eu-west-1
 environment:
-  - my-cool-chat-app-provider-creds
+  - demos/ai-chat-demo
