@@ -6,7 +6,7 @@ AI Chat application that uses OpenAI + Pinecone. Monitored by New Relic. Deploye
 
 - New Relic license key
 - Pinecone API Key
-- Open API Key
+- Open AI API Key
 
 ## Deploy to AWS with Pulumi
 
