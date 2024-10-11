@@ -135,4 +135,3 @@ dist
 **/*pycache*
 **/pyvenv.cfg
 infra/user_data.sh
-notes.md

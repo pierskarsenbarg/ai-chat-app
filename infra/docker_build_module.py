@@ -16,6 +16,7 @@ def build_push_images():
       ),
       tags=[f'docker.io/{username}/ai-chat-demo-web:latest'],
       push=True,
+      platforms=[docker_build.Platform.LINUX_AMD64],
       registries=[docker_build.RegistryArgs(
         address='docker.io',
         username=username,
@@ -30,6 +31,7 @@ def build_push_images():
       ),
       tags=[f'docker.io/{username}/ai-chat-demo-api:latest'],
       push=True,
+      platforms=[docker_build.Platform.LINUX_AMD64],
       registries=[docker_build.RegistryArgs(
         address='docker.io',
         username=username,

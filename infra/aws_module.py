@@ -69,7 +69,7 @@ def declare_aws_resources():
                 'protocol': 'tcp',
                 'from_port': 22,
                 'to_port': 22,
-                'cidr_blocks': ['18.237.140.160/29'], # us-west-2 limited
+                'cidr_blocks': [], # us-west-2 limited
             },
             {
                 'protocol': 'tcp',
@@ -102,17 +102,18 @@ def declare_aws_resources():
     sudo apt-get install -y -qq docker.io git
     sudo systemctl start docker
     sudo systemctl enable docker
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    
+    sudo curl -L "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
 
     # Set up the repo
-    git clone https://github.com/desteves/ai-chat-app.git /home/ubuntu/repo
+    git clone https://github.com/pierskarsenbarg/ai-chat-app.git /home/ubuntu/repo
     cd /home/ubuntu/repo/app
     
     # Set environment variables with Pulumi ESC
     curl -fsSL https://get.pulumi.com/esc/install.sh | sh
     export PULUMI_ACCESS_TOKEN={pulumi_access_token}
-    export PULUMI_ESC_ENV=my-cool-chat-app-env
+    export PULUMI_ESC_ENV=demos/ai-chat-demo
     /.pulumi/bin/esc env open $PULUMI_ESC_ENV --format dotenv > .env 
     unset PULUMI_ACCESS_TOKEN
     
@@ -122,11 +123,24 @@ def declare_aws_resources():
     docker-compose up -d
     '''
 
+    ami = aws.ec2.get_ami(filters=[{
+        "name": "name",
+        "values": ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    }], 
+    most_recent=True,
+    owners=["amazon"]
+    )
+
+    key_pair = aws.ec2.KeyPair("keypair", 
+        public_key=pulumi.Config().require_secret("publicKey"),
+        key_name="piers_key"
+    )
+
     instance = aws.ec2.Instance(
         'my_cool_instance',
         instance_type=aws.ec2.InstanceType.T2_MICRO,
         # https://cloud-images.ubuntu.com/locator/ec2/
-        ami='ami-01f519a731dd64ba7',  # Replace with a valid AMI ID, amd64/Ubuntu 22.04
+        ami=ami.id,  # Replace with a valid AMI ID, amd64/Ubuntu 22.04
         user_data=user_data,
         user_data_replace_on_change=True,
         vpc_security_group_ids=[security_group.id],  # Replace with a valid security group ID
@@ -135,6 +149,7 @@ def declare_aws_resources():
         tags={
             'Name': 'my-cool-instance',
         },
+        key_name=key_pair.key_name,
         # Ensure the instance is created only after the route table association is created
         # This is to ensure that the instance can communicate with the internet
         # thus the user_data script can successfully run
